@@ -85,34 +85,59 @@ you for a password."
   (format "%s encrypt" ansible-vault--command)
   "")
 
-;;;###autoload
+(defun ansible-vault--is-vault-file ()
+  ""
+  (let ((header-length (+ 1 (length ansible-vault-file-header))))
+    (and (> (point-max) header-length)
+         (string= ansible-vault-file-header
+                  (buffer-substring-no-properties (point-min) header-length)))
+    ))
+
+(defun ansible-vault--error-buffer ()
+  ""
+  (or (get-buffer "*ansible-vault-error*")
+      (let ((buffer (get-buffer-create "*ansible-vault-error*")))
+        (save-current-buffer
+          (set-buffer buffer)
+          (setq-local buffer-read-only t))
+        buffer)))
+
 (defun ansible-vault-decrypt-current-buffer ()
   ""
-  (shell-command-on-region
-   (point-min)
-   (point-max)
-   ansible-vault--decrypt-command
-   (current-buffer)
-   t
-   (get-buffer-create "*ansible-vault-decrypt-error*")
-   t))
+  (let ((inhibit-read-only t))
+    (shell-command-on-region
+     (point-min) (point-max)
+     ansible-vault--decrypt-command
+     (current-buffer) t
+     (ansible-vault--error-buffer))
+    ))
 
-;;;###autoload
 (defun ansible-vault-encrypt-current-buffer ()
   ""
-  (shell-command-on-region
-   (point-min)
-   (point-max)
-   ansible-vault--encrypt-command
-   (current-buffer)
-   t
-   (get-buffer-create "*ansible-vault-encrypt-error*")
-   t))
+  (let ((inhibit-read-only t))
+    (shell-command-on-region
+     (point-min) (point-max)
+     ansible-vault--encrypt-command
+     (current-buffer) t
+     (ansible-vault--error-buffer))
+    ))
 
 (defvar ansible-vault-mode-map
   (let ((map (make-sparse-keymap)))
     map)
   "Keymap for `ansible-vault' minor mode.")
+
+(defun ansible-vault--before-save-hook ()
+  ""
+  (setq-local ansible-vault--point (point))
+  (ansible-vault-encrypt-current-buffer))
+
+(defun ansible-vault--after-save-hook ()
+  ""
+  (ansible-vault-decrypt-current-buffer)
+  (set-buffer-modified-p nil)
+  (goto-char ansible-vault--point)
+  (setq-local ansible-vault--point 0))
 
 ;;;###autoload
 (define-minor-mode ansible-vault-mode
@@ -120,23 +145,19 @@ you for a password."
   :lighter " ansible-vault"
   :keymap ansible-vault-mode-map
   :group 'ansible-vault
+
+  ;; Disable backups
+  (setq-local backup-inhibited t)
+
+  ;; Disable auto-save
+  (and auto-save-default (auto-save-mode -1))
+
   ;; Decrypt the current buffer fist if it needs to be
-  (if (string= (buffer-substring-no-properties
-                (point-min) (+ 1 (length ansible-vault-file-header)))
-               ansible-vault-file-header)
-      (ansible-vault-decrypt-current-buffer))
-  ;; enable file encryption
-  (add-hook
-   'before-save-hook
-   'ansible-vault-encrypt-current-buffer
-   t t)
-  ;; enable file decryption
-  (add-hook
-   'after-save-hook
-   'ansible-vault-decrypt-current-buffer
-   t t)
-  ;; disable autosave
-  (auto-save-mode -1))
+  (and (ansible-vault--is-vault-file) (ansible-vault-decrypt-current-buffer))
+
+  ;; Add mode hooks
+  (add-hook 'before-save-hook 'ansible-vault--before-save-hook t t)
+  (add-hook 'after-save-hook 'ansible-vault--after-save-hook t t))
 
 (provide 'ansible-vault)
 
