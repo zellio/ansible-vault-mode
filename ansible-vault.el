@@ -8,7 +8,7 @@
 ;; Created: 2016-09-25
 ;; Version: 0.1.0
 ;; Keywords: org-mode, elisp, project
-;; Package-Requires: ((cl-lib "0.4"))
+;; Package-Requires: ()
 
 ;; This file is not part of GNU Emacs.
 
@@ -35,8 +35,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
-
 (defconst ansible-vault-version "0.1.0"
   "`ansible-vault' version.")
 
@@ -44,7 +42,7 @@
   "`ansible-vault' application group."
   :group 'applications
   :link '(url-link :tag "Website for ansible-vault-mode"
-                   "https://github.com/zellio/ansible-vault-mode")
+                        "https://github.com/zellio/ansible-vault-mode")
   :prefix "ansible-vault-")
 
 (defcustom ansible-vault-command "ansible-vault"
@@ -61,32 +59,33 @@ you for a password."
   :type 'string
   :group 'ansible-vault)
 
-(defcustom ansible-vault-file-header "$ANSIBLE_VAULT;1.1;AES256"
-  ""
-  :type 'string
-  :group 'ansible-vault)
+;;TODO: Make this more robust to version changes
+(defvar ansible-vault--file-header "$ANSIBLE_VAULT;1.1;AES256"
+  "`ansible-vault' file header for identification of encrypted buffers.
 
-(defcustom ansible-vault-enable-autosave nil
-  ""
-  :type 'string
-  :group 'ansible-vault)
+This will probably change at somepoint in the future and break
+everything and that will be sad.")
 
 (defvar ansible-vault--command
   (format "%s --vault-password-file='%s' --output=-"
           ansible-vault-command
           ansible-vault-pass-file)
-  "")
+  "Internal variable for `ansible-vault-mode'")
 
 (defvar ansible-vault--decrypt-command
   (format "%s decrypt" ansible-vault--command)
-  "")
+  "Internal variable for `ansible-vault-mode'")
 
 (defvar ansible-vault--encrypt-command
   (format "%s encrypt" ansible-vault--command)
-  "")
+  "Internal variable for `ansible-vault-mode'")
 
 (defun ansible-vault--is-vault-file ()
-  ""
+  "Identifies if the current buffer is an encrypted
+  `ansible-vault' file.
+
+This function just looks to see if the first line of the buffer
+is `ansible-vault--file-header'."
   (let ((header-length (+ 1 (length ansible-vault-file-header))))
     (and (> (point-max) header-length)
          (string= ansible-vault-file-header
@@ -94,7 +93,7 @@ you for a password."
     ))
 
 (defun ansible-vault--error-buffer ()
-  ""
+  "Generate or return `ansible-vault' error report buffer."
   (or (get-buffer "*ansible-vault-error*")
       (let ((buffer (get-buffer-create "*ansible-vault-error*")))
         (save-current-buffer
@@ -103,7 +102,7 @@ you for a password."
         buffer)))
 
 (defun ansible-vault-decrypt-current-buffer ()
-  ""
+  "In palce decryption of `current-buffer' using `ansible-vault'."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
@@ -113,7 +112,7 @@ you for a password."
     ))
 
 (defun ansible-vault-encrypt-current-buffer ()
-  ""
+  "In palce encryption of `current-buffer' using `ansible-vault'."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
@@ -128,12 +127,18 @@ you for a password."
   "Keymap for `ansible-vault' minor mode.")
 
 (defun ansible-vault--before-save-hook ()
-  ""
+  "`before-save-hook' for files managed by `ansible-vault-mode'.
+
+Saves the current position and encrpyts the file before writing
+to disk."
   (setq-local ansible-vault--point (point))
   (ansible-vault-encrypt-current-buffer))
 
 (defun ansible-vault--after-save-hook ()
-  ""
+  "`after-save-hook' for files managed by `ansible-vault-mode'.
+
+Decrypts the file, and returns the point to the position saved by
+the `before-save-hook'."
   (ansible-vault-decrypt-current-buffer)
   (set-buffer-modified-p nil)
   (goto-char ansible-vault--point)
