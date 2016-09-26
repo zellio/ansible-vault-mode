@@ -86,9 +86,9 @@ everything and that will be sad.")
 
 This function just looks to see if the first line of the buffer
 is `ansible-vault--file-header'."
-  (let ((header-length (+ 1 (length ansible-vault-file-header))))
+  (let ((header-length (+ 1 (length ansible-vault--file-header))))
     (and (> (point-max) header-length)
-         (string= ansible-vault-file-header
+         (string= ansible-vault--file-header
                   (buffer-substring-no-properties (point-min) header-length)))
     ))
 
