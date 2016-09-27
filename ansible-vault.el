@@ -70,17 +70,27 @@ everything and that will be sad.")
   (format "%s --vault-password-file='%s' --output=-"
           ansible-vault-command
           ansible-vault-pass-file)
-  "Internal variable for `ansible-vault-mode'")
+  "Internal variable for `ansible-vault-mode'
+
+Base command used for `ansible-vault' operations.")
 
 (defvar ansible-vault--decrypt-command
   (format "%s decrypt" ansible-vault--command)
-  "Internal variable for `ansible-vault-mode'")
+  "Internal variable for `ansible-vault-mode'
+
+Command used for buffer decryption.")
 
 (defvar ansible-vault--encrypt-command
   (format "%s encrypt" ansible-vault--command)
-  "Internal variable for `ansible-vault-mode'")
+  "Internal variable for `ansible-vault-mode'
 
-(defvar ansible-vault--point 0)
+Command used for buffer encryption.")
+
+(defvar ansible-vault--point 0
+  "Internal variable for `ansible-vault-mode'
+
+This is used to store the point between the encryption and
+decryption process on save to maintain continuity.")
 
 (defun ansible-vault--is-vault-file ()
   "Identifies if the current buffer is an encrypted
