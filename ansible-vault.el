@@ -80,6 +80,8 @@ everything and that will be sad.")
   (format "%s encrypt" ansible-vault--command)
   "Internal variable for `ansible-vault-mode'")
 
+(defvar ansible-vault--point 0)
+
 (defun ansible-vault--is-vault-file ()
   "Identifies if the current buffer is an encrypted
   `ansible-vault' file.
