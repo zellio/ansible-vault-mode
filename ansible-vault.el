@@ -7,7 +7,7 @@
 ;; URL: http://github.com/zellio/ansible-vault-mode
 ;; Created: 2016-09-25
 ;; Version: 0.1.0
-;; Keywords: org-mode, elisp, project
+;; Keywords: ansible, ansible-vault, tools
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is not part of GNU Emacs.
