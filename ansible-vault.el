@@ -8,7 +8,7 @@
 ;; Created: 2016-09-25
 ;; Version: 0.1.0
 ;; Keywords: org-mode, elisp, project
-;; Package-Requires: ()
+;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -79,6 +79,8 @@ everything and that will be sad.")
 (defvar ansible-vault--encrypt-command
   (format "%s encrypt" ansible-vault--command)
   "Internal variable for `ansible-vault-mode'")
+
+(defvar ansible-vault--point 0)
 
 (defun ansible-vault--is-vault-file ()
   "Identifies if the current buffer is an encrypted
