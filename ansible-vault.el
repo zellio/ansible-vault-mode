@@ -163,18 +163,34 @@ the `before-save-hook'."
   :keymap ansible-vault-mode-map
   :group 'ansible-vault
 
-  ;; Disable backups
-  (setq-local backup-inhibited t)
+  (if ansible-vault-mode
+      ;; Enable the mode
+      (progn
+        ;; Disable backups
+        (setq-local backup-inhibited t)
 
-  ;; Disable auto-save
-  (and auto-save-default (auto-save-mode -1))
+        ;; Disable auto-save
+        (if auto-save-default (auto-save-mode -1))
 
-  ;; Decrypt the current buffer fist if it needs to be
-  (and (ansible-vault--is-vault-file) (ansible-vault-decrypt-current-buffer))
+        ;; Decrypt the current buffer fist if it needs to be
+        (if (ansible-vault--is-vault-file)
+            (ansible-vault-decrypt-current-buffer))
 
-  ;; Add mode hooks
-  (add-hook 'before-save-hook 'ansible-vault--before-save-hook t t)
-  (add-hook 'after-save-hook 'ansible-vault--after-save-hook t t))
+        ;; Add mode hooks
+        (add-hook 'before-save-hook 'ansible-vault--before-save-hook t t)
+        (add-hook 'after-save-hook 'ansible-vault--after-save-hook t t))
+
+    ;; Disable the mode
+    (remove-hook 'after-save-hook 'ansible-vault--after-save-hook t)
+    (remove-hook 'before-save-hook 'ansible-vault--before-save-hook t)
+
+    ;; Re-encrypt the current buffer
+    (if (not (ansible-vault--is-vault-file))
+        (ansible-vault-encrypt-current-buffer))
+
+    (if auto-save-default (auto-save-mode 1))
+
+    (setq-local backup-inhibited nil)))
 
 (provide 'ansible-vault)
 
