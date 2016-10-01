@@ -1,4 +1,4 @@
-;;; ansible-vault.el --- Major mode for editing ansible vault files
+;;; ansible-vault.el --- Minor mode for editing ansible vault files
 
 ;; Copyright (C) 2016 Zachary Elliott
 ;;
