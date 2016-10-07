@@ -49,6 +49,27 @@ when needed.
     (and (string= (file-name-base) "encrypted") (ansible-vault-mode 1))))
 ```
 
+### Per directory ansible-vault password file
+
+To override ansible-vault password file on a per directory basis:
+first, create a .dir-locals.el file in your directory:
+
+```lisp
+((yaml-mode
+  (ansible-vault-pass-file . "/home/notroot/.ansible-vault/custom_vault_pass")))
+```
+then, if all your vaulted files are prefixed by "vault_", you can load
+ansible-vault-mode in your init file this way:
+
+```lisp
+(add-hook 'hack-local-variables-hook
+          (lambda ()
+            (when (and
+                   (derived-mode-p 'yaml-mode)
+                   (string-prefix-p "vault_" (file-name-base)))
+              (ansible-vault-mode 1))))
+```
+
 ## Contributing
 
 Bug reports and pull requests are welcome on [GitHub issues][issues]. This
