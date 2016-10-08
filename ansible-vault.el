@@ -42,7 +42,7 @@
   "`ansible-vault' application group."
   :group 'applications
   :link '(url-link :tag "Website for ansible-vault-mode"
-                        "https://github.com/zellio/ansible-vault-mode")
+                   "https://github.com/zellio/ansible-vault-mode")
   :prefix "ansible-vault-")
 
 (defcustom ansible-vault-command "ansible-vault"
@@ -65,26 +65,6 @@ you for a password."
 
 This will probably change at somepoint in the future and break
 everything and that will be sad.")
-
-(defvar ansible-vault--command
-  (format "%s --vault-password-file='%s' --output=-"
-          ansible-vault-command
-          ansible-vault-pass-file)
-  "Internal variable for `ansible-vault-mode'
-
-Base command used for `ansible-vault' operations.")
-
-(defvar ansible-vault--decrypt-command
-  (format "%s decrypt" ansible-vault--command)
-  "Internal variable for `ansible-vault-mode'
-
-Command used for buffer decryption.")
-
-(defvar ansible-vault--encrypt-command
-  (format "%s encrypt" ansible-vault--command)
-  "Internal variable for `ansible-vault-mode'
-
-Command used for buffer encryption.")
 
 (defvar ansible-vault--point 0
   "Internal variable for `ansible-vault-mode'
@@ -113,22 +93,33 @@ is `ansible-vault--file-header'."
           (setq-local buffer-read-only t))
         buffer)))
 
+(defun ansible-vault--call-command (command)
+  "Generate `ansible-vault' command with common args.
+
+Ansible vault is called with the same arguments in both the
+encryption and decryption case. Use this to generate the
+substring shared between them."
+  (format "%s --vault-password-file='%s' --output=- %s"
+          ansible-vault-command
+          ansible-vault-pass-file
+          command))
+
 (defun ansible-vault-decrypt-current-buffer ()
-  "In palce decryption of `current-buffer' using `ansible-vault'."
+  "In place decryption of `current-buffer' using `ansible-vault'."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
-     ansible-vault--decrypt-command
+     (ansible-vault--call-command 'decrypt)
      (current-buffer) t
      (ansible-vault--error-buffer))
     ))
 
 (defun ansible-vault-encrypt-current-buffer ()
-  "In palce encryption of `current-buffer' using `ansible-vault'."
+  "In place encryption of `current-buffer' using `ansible-vault'."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
-     ansible-vault--encrypt-command
+     (ansible-vault--call-command 'encrypt)
      (current-buffer) t
      (ansible-vault--error-buffer))
     ))
