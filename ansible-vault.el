@@ -42,7 +42,7 @@
   "`ansible-vault' application group."
   :group 'applications
   :link '(url-link :tag "Website for ansible-vault-mode"
-                        "https://github.com/zellio/ansible-vault-mode")
+                   "https://github.com/zellio/ansible-vault-mode")
   :prefix "ansible-vault-")
 
 (defcustom ansible-vault-command "ansible-vault"
@@ -93,14 +93,23 @@ is `ansible-vault--file-header'."
           (setq-local buffer-read-only t))
         buffer)))
 
+(defun ansible-vault--call-command (command)
+  "Generate `ansible-vault' command with common args.
+
+Ansible vault is called with the same arguments in both the
+encryption and decryption case. Use this to generate the
+substring shared between them."
+  (format "%s --vault-password-file='%s' --output=- %s"
+          ansible-vault-command
+          ansible-vault-pass-file
+          command))
+
 (defun ansible-vault-decrypt-current-buffer ()
   "In place decryption of `current-buffer' using `ansible-vault'."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
-     (format "%s --vault-password-file='%s' --output=- decrypt"
-	     ansible-vault-command
-	     ansible-vault-pass-file)
+     (ansible-vault--call-command 'decrypt)
      (current-buffer) t
      (ansible-vault--error-buffer))
     ))
@@ -110,9 +119,7 @@ is `ansible-vault--file-header'."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
-     (format "%s --vault-password-file='%s' --output=- encrypt"
-	     ansible-vault-command
-	     ansible-vault-pass-file)
+     (ansible-vault--call-command 'encrypt)
      (current-buffer) t
      (ansible-vault--error-buffer))
     ))
