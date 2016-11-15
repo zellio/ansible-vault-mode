@@ -163,9 +163,10 @@ the `before-save-hook'."
         ;; Disable auto-save
         (if auto-save-default (auto-save-mode -1))
 
-        ;; Decrypt the current buffer fist if it needs to be
-        (if (ansible-vault--is-vault-file)
-            (ansible-vault-decrypt-current-buffer))
+        ;; Decrypt the current buffer first if it needs to be
+        (when (ansible-vault--is-vault-file)
+            (ansible-vault-decrypt-current-buffer)
+            (set-buffer-modified-p nil))
 
         ;; Add mode hooks
         (add-hook 'before-save-hook 'ansible-vault--before-save-hook t t)
