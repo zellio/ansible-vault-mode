@@ -49,6 +49,25 @@ when needed.
     (and (string= (file-name-base) "encrypted") (ansible-vault-mode 1))))
 ```
 
+### Automatic enabling based on file contents
+
+To enable `ansible-vault-mode` just based on the buffer contents, not on file extension, you can do:
+
+```
+  (defun ansible-vault-mode-maybe ()
+    (when (ansible-vault--is-vault-file)
+      (ansible-vault-mode 1)))
+
+  (add-hook 'yaml-mode-hook 'ansible-vault-mode-maybe)
+```
+
+And if you use the handy `use-package` package replace the last line with:
+
+```
+  (use-package ansible-vault
+    :init (add-hook 'yaml-mode-hook 'ansible-vault-mode-maybe))
+```
+
 ### Per directory ansible-vault password file
 
 To override ansible-vault password file on a per directory basis:
