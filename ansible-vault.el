@@ -72,6 +72,7 @@ everything and that will be sad.")
 This is used to store the point between the encryption and
 decryption process on save to maintain continuity.")
 
+;;;###autoload
 (defun ansible-vault--is-vault-file ()
   "Identifies if the current buffer is an encrypted
   `ansible-vault' file.
