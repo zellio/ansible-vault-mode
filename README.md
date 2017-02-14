@@ -49,6 +49,9 @@ when needed.
     (and (string= (file-name-base) "encrypted") (ansible-vault-mode 1))))
 ```
 
+The ```*ansible-vault-error*``` buffer will contain any errors from ansible-vault execution.
+
+
 ### Automatic enabling based on file contents
 
 To enable `ansible-vault-mode` just based on the buffer contents, not on file extension, you can do:
