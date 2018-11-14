@@ -100,10 +100,14 @@ is `ansible-vault--file-header'."
 Ansible vault is called with the same arguments in both the
 encryption and decryption case. Use this to generate the
 substring shared between them."
-  (format "%s --vault-password-file='%s' --output=- %s"
-          ansible-vault-command
-          ansible-vault-pass-file
-          command))
+  (if ansible-vault-pass-file
+      (format "%s --vault-password-file='%s' --output=- %s"
+              ansible-vault-command
+              ansible-vault-pass-file
+              command)
+    (format "%s --output=- %s"
+            ansible-vault-command
+            command)))
 
 (defun ansible-vault-decrypt-current-buffer ()
   "In place decryption of `current-buffer' using `ansible-vault'."
