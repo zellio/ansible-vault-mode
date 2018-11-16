@@ -6,7 +6,7 @@
 ;; Maintainer: Zachary Elliott <contact@zell.io>
 ;; URL: http://github.com/zellio/ansible-vault-mode
 ;; Created: 2016-09-25
-;; Version: 0.3.3
+;; Version: 0.3.4
 ;; Keywords: ansible, ansible-vault, tools
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -35,7 +35,7 @@
 
 ;;; Code:
 
-(defconst ansible-vault-version "0.3.3"
+(defconst ansible-vault-version "0.3.4"
   "`ansible-vault' version.")
 
 (defgroup ansible-vault nil
@@ -72,6 +72,7 @@ everything and that will be sad.")
 This is used to store the point between the encryption and
 decryption process on save to maintain continuity.")
 
+;;;###autoload
 (defun ansible-vault--is-vault-file ()
   "Identifies if the current buffer is an encrypted
   `ansible-vault' file.
@@ -99,10 +100,14 @@ is `ansible-vault--file-header'."
 Ansible vault is called with the same arguments in both the
 encryption and decryption case. Use this to generate the
 substring shared between them."
-  (format "%s --vault-password-file='%s' --output=- %s"
-          ansible-vault-command
-          ansible-vault-pass-file
-          command))
+  (if ansible-vault-pass-file
+      (format "%s --vault-password-file='%s' --output=- %s"
+              ansible-vault-command
+              ansible-vault-pass-file
+              command)
+    (format "%s --output=- %s"
+            ansible-vault-command
+            command)))
 
 (defun ansible-vault-decrypt-current-buffer ()
   "In place decryption of `current-buffer' using `ansible-vault'."
