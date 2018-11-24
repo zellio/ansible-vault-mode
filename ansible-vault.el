@@ -129,6 +129,16 @@ substring shared between them."
      (ansible-vault--error-buffer))
     ))
 
+(defun ansible-vault-decrypt-region (start end)
+  "In place decryption of region from START to END using `ansible-vault'."
+  (interactive "r")
+  (let ((inibit-read-only t))
+    (shell-command-on-region
+     start end
+     (ansible-vault--call-command "decrypt")
+     (current-buffer) t
+     (ansible-vault--error-buffer))))
+
 (defvar ansible-vault-mode-map
   (let ((map (make-sparse-keymap)))
     map)
