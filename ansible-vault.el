@@ -135,6 +135,12 @@ substring shared between them."
   (let ((inhibit-read-only t))
     ;; Restrict the following operations to the selected region.
     (narrow-to-region start end)
+    ;; Delete the vault header, if any.
+    (let ((end-of-first-line (progn (goto-char 1) (end-of-line) (point))))
+      (goto-char 1)
+      (when (re-search-forward (rx line-start "!vault |" line-end) end-of-first-line t)
+        (replace-match "")
+        (kill-line)))
     ;; Delete any leading whitespace in the region.
     (goto-char 1)
     (delete-horizontal-space)
