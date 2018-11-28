@@ -145,6 +145,16 @@ substring shared between them."
     ;; Show the rest of the buffer.
     (widen)))
 
+(defun ansible-vault-encrypt-region (start end)
+  "In place encryption of region from START to END using `ansible-vault'."
+  (interactive "r")
+  (let ((inhitibit-read-only t))
+    (shell-command-on-region
+     start end
+     (ansible-vault--call-command "encrypt_string")
+     (current-buffer) t
+     (ansible-vault--error-buffer))))
+
 (defvar ansible-vault-mode-map
   (let ((map (make-sparse-keymap)))
     map)
