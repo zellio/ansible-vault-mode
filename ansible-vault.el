@@ -94,20 +94,20 @@ is `ansible-vault--file-header'."
           (setq-local buffer-read-only t))
         buffer)))
 
-(defun ansible-vault--call-command (command)
-  "Generate `ansible-vault' command with common args.
+(defun ansible-vault--call-command (subcommand)
+  "Generate Ansible Vault command with common args and SUBCOMMAND.
 
-Ansible vault is called with the same arguments in both the
-encryption and decryption case. Use this to generate the
-substring shared between them."
-  (if ansible-vault-pass-file
-      (format "%s --vault-password-file='%s' --output=- %s"
-              ansible-vault-command
-              ansible-vault-pass-file
-              command)
-    (format "%s --output=- %s"
-            ansible-vault-command
-            command)))
+The command \"ansible-vault\" is called with the same arguments whether
+decrypting, encrypting a file, or encrypting a string.  This function
+generates the shell string for any such command.
+
+SUBCOMMAND is the \"ansible-vault\" sucommand to use."
+  (concat
+   ansible-vault-command " "
+   (when ansible-vault-pass-file
+     (format "--vault-password-file='%s' " ansible-vault-pass-file))
+   "--output=- "
+   subcommand))
 
 (defun ansible-vault-decrypt-current-buffer ()
   "In place decryption of `current-buffer' using `ansible-vault'."
