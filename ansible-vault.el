@@ -129,6 +129,38 @@ SUBCOMMAND is the \"ansible-vault\" sucommand to use."
      (ansible-vault--error-buffer))
     ))
 
+(defun ansible-vault-decrypt-region (start end)
+  "In place decryption of region from START to END using `ansible-vault'."
+  (interactive "r")
+  (let ((inhibit-read-only t))
+    ;; Restrict the following operations to the selected region.
+    (narrow-to-region start end)
+    ;; Delete the vault header, if any.
+    (let ((end-of-first-line (progn (goto-char 1) (end-of-line) (point))))
+      (goto-char 1)
+      (when (re-search-forward (rx line-start "!vault |" line-end) end-of-first-line t)
+        (replace-match "")
+        (kill-line)))
+    ;; Delete any leading whitespace in the region.
+    (goto-char 1)
+    (delete-horizontal-space)
+    (while (= 0 (forward-line 1))
+      (delete-horizontal-space))
+    ;; Decrypt the region.
+    (ansible-vault-decrypt-current-buffer)
+    ;; Show the rest of the buffer.
+    (widen)))
+
+(defun ansible-vault-encrypt-region (start end)
+  "In place encryption of region from START to END using `ansible-vault'."
+  (interactive "r")
+  (let ((inhitibit-read-only t))
+    (shell-command-on-region
+     start end
+     (ansible-vault--call-command "encrypt_string")
+     (current-buffer) t
+     (ansible-vault--error-buffer))))
+
 (defvar ansible-vault-mode-map
   (let ((map (make-sparse-keymap)))
     map)
