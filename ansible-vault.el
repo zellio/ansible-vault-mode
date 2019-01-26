@@ -114,20 +114,18 @@ SUBCOMMAND is the \"ansible-vault\" sucommand to use."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
-     (ansible-vault--call-command 'decrypt)
+     (ansible-vault--call-command "decrypt")
      (current-buffer) t
-     (ansible-vault--error-buffer))
-    ))
+     (ansible-vault--error-buffer))))
 
 (defun ansible-vault-encrypt-current-buffer ()
   "In place encryption of `current-buffer' using `ansible-vault'."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
-     (ansible-vault--call-command 'encrypt)
+     (ansible-vault--call-command "encrypt")
      (current-buffer) t
-     (ansible-vault--error-buffer))
-    ))
+     (ansible-vault--error-buffer))))
 
 (defun ansible-vault-decrypt-region (start end)
   "In place decryption of region from START to END using `ansible-vault'."
