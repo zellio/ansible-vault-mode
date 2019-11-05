@@ -103,11 +103,11 @@ generates the shell string for any such command.
 
 SUBCOMMAND is the \"ansible-vault\" sucommand to use."
   (concat
-   ansible-vault-command " "
+   ansible-vault-command " " subcommand " "
    (when ansible-vault-pass-file
      (format "--vault-password-file='%s' " ansible-vault-pass-file))
    "--output=- "
-   subcommand))
+   ))
 
 (defun ansible-vault-decrypt-current-buffer ()
   "In place decryption of `current-buffer' using `ansible-vault'."
