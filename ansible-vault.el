@@ -6,7 +6,7 @@
 ;; Maintainer: Zachary Elliott <contact@zell.io>
 ;; URL: http://github.com/zellio/ansible-vault-mode
 ;; Created: 2016-09-25
-;; Version: 0.3.5
+;; Version: 0.3.6
 ;; Keywords: ansible, ansible-vault, tools
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -35,7 +35,7 @@
 
 ;;; Code:
 
-(defconst ansible-vault-version "0.3.5"
+(defconst ansible-vault-version "0.3.6"
   "`ansible-vault' version.")
 
 (defgroup ansible-vault nil
@@ -94,40 +94,70 @@ is `ansible-vault--file-header'."
           (setq-local buffer-read-only t))
         buffer)))
 
-(defun ansible-vault--call-command (command)
-  "Generate `ansible-vault' command with common args.
+(defun ansible-vault--call-command (subcommand)
+  "Generate Ansible Vault command with common args and SUBCOMMAND.
 
-Ansible vault is called with the same arguments in both the
-encryption and decryption case. Use this to generate the
-substring shared between them."
-  (if ansible-vault-pass-file
-      (format "%s --vault-password-file='%s' --output=- %s"
-              ansible-vault-command
-              ansible-vault-pass-file
-              command)
-    (format "%s --output=- %s"
-            ansible-vault-command
-            command)))
+The command \"ansible-vault\" is called with the same arguments whether
+decrypting, encrypting a file, or encrypting a string.  This function
+generates the shell string for any such command.
+
+SUBCOMMAND is the \"ansible-vault\" sucommand to use."
+  (concat
+   ansible-vault-command " " subcommand " "
+   (when ansible-vault-pass-file
+     (format "--vault-password-file='%s' " ansible-vault-pass-file))
+   "--output=- "
+   ))
 
 (defun ansible-vault-decrypt-current-buffer ()
   "In place decryption of `current-buffer' using `ansible-vault'."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
-     (ansible-vault--call-command 'decrypt)
+     (ansible-vault--call-command "decrypt")
      (current-buffer) t
-     (ansible-vault--error-buffer))
-    ))
+     (ansible-vault--error-buffer))))
 
 (defun ansible-vault-encrypt-current-buffer ()
   "In place encryption of `current-buffer' using `ansible-vault'."
   (let ((inhibit-read-only t))
     (shell-command-on-region
      (point-min) (point-max)
-     (ansible-vault--call-command 'encrypt)
+     (ansible-vault--call-command "encrypt")
      (current-buffer) t
-     (ansible-vault--error-buffer))
-    ))
+     (ansible-vault--error-buffer))))
+
+(defun ansible-vault-decrypt-region (start end)
+  "In place decryption of region from START to END using `ansible-vault'."
+  (interactive "r")
+  (let ((inhibit-read-only t))
+    ;; Restrict the following operations to the selected region.
+    (narrow-to-region start end)
+    ;; Delete the vault header, if any.
+    (let ((end-of-first-line (progn (goto-char 1) (end-of-line) (point))))
+      (goto-char 1)
+      (when (re-search-forward (rx line-start "!vault |" line-end) end-of-first-line t)
+        (replace-match "")
+        (kill-line)))
+    ;; Delete any leading whitespace in the region.
+    (goto-char 1)
+    (delete-horizontal-space)
+    (while (= 0 (forward-line 1))
+      (delete-horizontal-space))
+    ;; Decrypt the region.
+    (ansible-vault-decrypt-current-buffer)
+    ;; Show the rest of the buffer.
+    (widen)))
+
+(defun ansible-vault-encrypt-region (start end)
+  "In place encryption of region from START to END using `ansible-vault'."
+  (interactive "r")
+  (let ((inhitibit-read-only t))
+    (shell-command-on-region
+     start end
+     (ansible-vault--call-command "encrypt_string")
+     (current-buffer) t
+     (ansible-vault--error-buffer))))
 
 (defvar ansible-vault-mode-map
   (let ((map (make-sparse-keymap)))

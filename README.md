@@ -15,7 +15,7 @@ your conf files:
 
 ```lisp
 (add-to-list 'load-path "/path/to/ansible-vault")
-(require 'ansible-vault-mode)
+(require 'ansible-vault)
 ```
 
 ## Usage
