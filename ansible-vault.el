@@ -1,6 +1,6 @@
 ;;; ansible-vault.el --- Minor mode for editing ansible vault files
 
-;; Copyright (C) 2016 Zachary Elliott
+;; Copyright (C) 2016-2019 Zachary Elliott
 ;;
 ;; Authors: Zachary Elliott <contact@zell.io>
 ;; Maintainer: Zachary Elliott <contact@zell.io>
@@ -8,7 +8,7 @@
 ;; Created: 2016-09-25
 ;; Version: 0.3.6
 ;; Keywords: ansible, ansible-vault, tools
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "24.3") (seq "2.20"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -60,7 +60,7 @@
   "File containing `ansible-vault' password.
 
 This file is used for encryption and decryption of ansible vault
-files.  If it is set to `nil' `ansible-vault-mode' will prompt
+files.  If it is set to nil `ansible-vault-mode' will prompt
 you for a password."
   :type 'string
   :group 'ansible-vault)
@@ -73,25 +73,25 @@ This will probably change at somepoint in the future and break
 everything and that will be sad.")
 
 (defvar ansible-vault--point 0
-  "Internal variable for `ansible-vault-mode'
+  "Internal variable for `ansible-vault-mode'.
 
 This is used to store the point between the encryption and
 decryption process on save to maintain continuity.")
 
 (defvar ansible-vault--password-file-list '()
-  "Internal variable for `ansible-vault-mode'
+  "Internal variable for `ansible-vault-mode'.
 
 This is used to store the list of password files that ansible
 vault must clear on close.")
 
 (defvar ansible-vault--password-file '()
-  "Internal variable for `ansible-vault-mode'
+  "Internal variable for `ansible-vault-mode'.
 
 This is used to store the location of the ansible vault password
 file as we don't trust the user.")
 
 (defvar ansible-vault--password '()
-  "Internal variable for `ansible-vault-mode'
+  "Internal variable for `ansible-vault-mode'.
 
 This is used to store the password for a file in memory so we
 don't have to keep asking the user for it.")
@@ -312,7 +312,7 @@ Flushes saved password state."
 
 ;;;###autoload
 (defun ansible-vault--kill-emacs-hook ()
-  "`kill-emacs-hook' for emacs when `ansible-vault-mode' is loaded.
+  "`kill-emacs-hook' for Emacs when `ansible-vault-mode' is loaded.
 
 Ensures deletion of ansible-vault generated password files."
   (dolist (file ansible-vault--password-file-list)
