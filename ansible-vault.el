@@ -6,7 +6,7 @@
 ;; Maintainer: Zachary Elliott <contact@zell.io>
 ;; URL: http://github.com/zellio/ansible-vault-mode
 ;; Created: 2016-09-25
-;; Version: 0.3.6
+;; Version: 0.4.0
 ;; Keywords: ansible, ansible-vault, tools
 ;; Package-Requires: ((emacs "24.3") (seq "2.20"))
 
@@ -37,7 +37,7 @@
 
 (require 'seq)
 
-(defconst ansible-vault-version "0.3.6"
+(defconst ansible-vault-version "0.4.0"
   "`ansible-vault' version.")
 
 (defgroup ansible-vault nil
