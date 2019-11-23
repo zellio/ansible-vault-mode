@@ -166,18 +166,17 @@ ANSIBLE_VAULT_PASSWORD_FILE, the ansible vault configuration files, and the
 minor-mode configured vaule.  If that fails, it will prompt the user for
 input."
   (interactive)
-  (if (or (not (= (length (getenv "ANSIBLE_VAULT_PASSWORD_FILE")) 0))
-          (not (= (length (ansible-vault--process-config-files)) 0)))
-      '()
-    (or ansible-vault-password-file
-        (ansible-vault--request-password))
+  (let ((env-val (getenv "ANSIBLE_VAULT_PASSWORD_FILE")))
+    (cond ((> (length env-val) 0) env-val)
+          ((> (length (ansible-vault--process-config-files)) 0) '())
+          (t (or ansible-vault-password-file (ansible-vault--request-password))))
     ))
 
 (defun ansible-vault--request-password ()
   "Requests vault password form the user.
 
-This method writes the password to disk temporarily. The file is chowned to
-0600."
+This method writes the password to disk temporarily.  The file is
+chowned to 0600."
   (interactive)
   (unless ansible-vault--password
     (setq-local ansible-vault--password (read-passwd "Vault password: "))
@@ -195,6 +194,16 @@ This method writes the password to disk temporarily. The file is chowned to
     (setq-local ansible-vault--password nil)
     (setq-local ansible-vault--password-file nil)))
 
+(defmacro ansible-vault--env-mask (env &optional val &rest body)
+  "Masks system ENV as VAL for BODY execution."
+  (let ((env-val (make-symbol "env-val")))
+    `(let ((,env-val (getenv ,env)))
+       (unwind-protect
+           (progn
+             (setenv ,env ,val)
+             ,@body)
+         (setenv ,env ,env-val)))))
+
 (defun ansible-vault--execute-on-region (command &optional start end buffer error-buffer)
   "In place exection of a given COMMAND using `ansible-vault'.
 
@@ -204,16 +213,20 @@ BUFFER defaults to current buffer.
 ERROR-BUFFER defaults to `ansible-vault--error-buffer'."
   (let* ((inhibit-message t)
          (message-log-max nil)
+         (start (or start (point-min)))
+         (end (or end (point-max)))
          (ansible-vault-stdout (get-buffer-create "*ansible-vault-stdout*"))
          (ansible-vault-stderr (get-buffer-create "*ansible-vault-stderr*"))
          (password-file (ansible-vault--guess-password-file))
          (shell-command (ansible-vault--shell-command command password-file)))
     (unwind-protect
         (progn
-          (shell-command-on-region
-           (or start (point-min)) (or end (point-max))
-           shell-command
-           ansible-vault-stdout nil ansible-vault-stderr nil)
+          (ansible-vault--env-mask
+           "ANSIBLE_VAULT_PASSWORD_FILE" nil
+           (shell-command-on-region
+            start end
+            shell-command
+            ansible-vault-stdout nil ansible-vault-stderr nil))
           (if (= (buffer-size ansible-vault-stderr) 0)
               (progn
                 (delete-region start end)
