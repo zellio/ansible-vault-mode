@@ -52,6 +52,10 @@
   :type 'string
   :group 'ansible-vault)
 
+(define-obsolete-variable-alias
+  'ansible-vault-pass-file 'ansible-vault-password-file "0.4.0"
+  "Migrated to unify naming conventions.")
+
 (defcustom ansible-vault-password-file (expand-file-name ".vault-pass" "~")
   "File containing `ansible-vault' password.
 
@@ -60,10 +64,6 @@ files.  If it is set to `nil' `ansible-vault-mode' will prompt
 you for a password."
   :type 'string
   :group 'ansible-vault)
-
-(define-obsolete-variable-alias
-  ansible-vault-pass-file ansible-vault-password-file "0.4.0"
-  "Migrated to unify naming conventions.")
 
 ;;TODO: Make this more robust to version changes
 (defvar ansible-vault--file-header "$ANSIBLE_VAULT;1.1;AES256"
