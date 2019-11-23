@@ -196,10 +196,15 @@ This method writes the password to disk temporarily. The file is chowned to
     (delete-file ansible-vault--password-file)
     (delete ansible-vault--password-file ansible-vault--password-file-list)
     (setq-local ansible-vault--password nil)
-    (setq-local ansible-vault--password-file nil))
+    (setq-local ansible-vault--password-file nil)))
 
-(defun ansible-vault--execute-on-region (command start end &optional buffer error-buffer)
-  "In place exection of a given subcommand using `ansible-vult'."
+(defun ansible-vault--execute-on-region (command &optional start end buffer error-buffer)
+  "In place exection of a given COMMAND using `ansible-vault'.
+
+START defaults to `point-min'.
+END defaults to `point-max'.
+BUFFER defaults to current buffer.
+ERROR-BUFFER defaults to `ansible-vault--error-buffer'."
   (let* ((inhibit-message t)
          (message-log-max nil)
          (ansible-vault-stdout (get-buffer-create "*ansible-vault-stdout*"))
@@ -209,7 +214,7 @@ This method writes the password to disk temporarily. The file is chowned to
     (unwind-protect
         (progn
           (shell-command-on-region
-           start end
+           (or start (point-min)) (or end (point-max))
            shell-command
            ansible-vault-stdout nil ansible-vault-stderr nil)
           (if (= (buffer-size ansible-vault-stderr) 0)
@@ -232,11 +237,11 @@ This method writes the password to disk temporarily. The file is chowned to
 
 (defun ansible-vault-decrypt-current-buffer ()
   "In place decryption of `current-buffer' using `ansible-vault'."
-  (ansible-vault--execute-on-region "decrypt" (point-min) (point-max)))
+  (ansible-vault--execute-on-region "decrypt"))
 
 (defun ansible-vault-encrypt-current-buffer ()
   "In place encryption of `current-buffer' using `ansible-vault'."
-  (ansible-vault--execute-on-region "encrypt" (point-min) (point-max)))
+  (ansible-vault--execute-on-region "encrypt"))
 
 (defun ansible-vault-decrypt-region (start end)
   "In place decryption of region from START to END using `ansible-vault'."
