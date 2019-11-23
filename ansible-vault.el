@@ -181,12 +181,9 @@ This method writes the password to disk temporarily. The file is chowned to
   (interactive)
   (unless ansible-vault--password
     (setq-local ansible-vault--password (read-passwd "Vault password: "))
-    (setq-local ansible-vault--password-file (make-temp-name ".ansible-vault-mode-password-file-"))
-    (with-temp-buffer
-      (write-file ansible-vault--password-file)
-      (set-file-modes ansible-vault--password-file #o600)
-      (insert ansible-vault--password)
-      (write-file ansible-vault--password-file))
+    (setq-local ansible-vault--password-file (make-temp-file "ansible-vault-mode-password-file-" ))
+    (set-file-modes ansible-vault--password-file #o600)
+    (append-to-file ansible-vault--password nil ansible-vault--password-file)
     (push ansible-vault--password-file ansible-vault--password-file-list))
   ansible-vault--password-file)
 
@@ -329,7 +326,7 @@ Ensures deletion of ansible-vault generated password files."
 
         ;; Decrypt the current buffer first if it needs to be
         (when (ansible-vault--is-vault-file)
-         (ansible-vault-decrypt-current-buffer)
+          (ansible-vault-decrypt-current-buffer)
           (set-buffer-modified-p nil))
 
         ;; Add mode hooks
