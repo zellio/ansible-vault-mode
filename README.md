@@ -74,11 +74,11 @@ And if you use the handy `use-package` package replace the last line with:
 ### Per directory ansible-vault password file
 
 To override ansible-vault password file on a per directory basis:
-first, create a .dir-locals.el file in your directory:
+first, create a `.dir-locals.el` file in your directory:
 
 ```lisp
 ((yaml-mode
-  (ansible-vault-pass-file . "/home/notroot/.ansible-vault/custom_vault_pass")))
+  (ansible-vault-password-file . "/home/notroot/.ansible-vault/custom_vault_pass")))
 ```
 then, if all your vaulted files are prefixed by "vault_", you can load
 ansible-vault-mode in your init file this way:
