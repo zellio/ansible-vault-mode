@@ -121,14 +121,21 @@ is `ansible-vault--file-header'."
   "Generate Ansible Vault command with common args and SUBCOMMAND.
 
 The command \"ansible-vault\" is called with the same arguments whether
-decrypting, encrypting a file, or encrypting a string.  This function
-generates the shell string for any such command.
+decrypting, encrypting a file, or encrypting a string; it's only called
+with a different set of arguments when performing \"view\" on the
+current buffer.
+This happens as the \"view\" subcommand expects a file as argument.
+This function generates the shell string for any such command.
 
 SUBCOMMAND is the \"ansible-vault\" subcommand to use.
 
 PASS-FILE is the path to the vault password file on disk."
-  (concat (format "%s %s --output=-" ansible-vault-command subcommand) " "
-          (when pass-file (format "--vault-password-file=%S" pass-file))))
+  (if (string= subcommand "view")
+      (concat (format "%s %s" ansible-vault-command subcommand) " "
+              (buffer-file-name) " "
+          (when pass-file (format "--vault-password-file=%S" pass-file)))
+    (concat (format "%s %s --output=-" ansible-vault-command subcommand) " "
+          (when pass-file (format "--vault-password-file=%S" pass-file)))))
 
 (defun ansible-vault--process-config-files ()
   "Attempts to discover if vault_password_file is defined in any
@@ -253,6 +260,10 @@ ERROR-BUFFER defaults to `ansible-vault--error-buffer'."
   "In place encryption of `current-buffer' using `ansible-vault'."
   (ansible-vault--execute-on-region "encrypt"))
 
+(defun ansible-vault-view-current-buffer ()
+  "In place view of `current-buffer' using `ansible-vault'."
+  (ansible-vault--execute-on-region "view"))
+
 (defun ansible-vault-decrypt-region (start end)
   "In place decryption of region from START to END using `ansible-vault'."
   (interactive "r")
@@ -337,9 +348,9 @@ Ensures deletion of ansible-vault generated password files."
         ;; Disable auto-save
         (if auto-save-default (auto-save-mode -1))
 
-        ;; Decrypt the current buffer first if it needs to be
+        ;; Decrypt the current buffer via the 'view' subcommand
         (when (ansible-vault--is-vault-file)
-          (ansible-vault-decrypt-current-buffer)
+          (ansible-vault-view-current-buffer)
           (set-buffer-modified-p nil))
 
         ;; Add mode hooks
@@ -353,9 +364,11 @@ Ensures deletion of ansible-vault generated password files."
     (remove-hook 'before-save-hook 'ansible-vault--before-save-hook t)
     (remove-hook 'kill-buffer-hook 'ansible-vault--kill-buffer-hook t)
 
-    ;; Re-encrypt the current buffer
-    (if (not (ansible-vault--is-vault-file))
-        (ansible-vault-encrypt-current-buffer))
+    ;; Only re-encrypt the buffer if buffer is changed; otherwise revert
+    ;; to on-disk contents.
+    (if (and (buffer-modified-p) (not (ansible-vault--is-vault-file)))
+        (ansible-vault-encrypt-current-buffer)
+      (revert-buffer nil t nil))
 
     ;; Clean up password state
     (ansible-vault--flush-password)
