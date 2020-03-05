@@ -353,9 +353,11 @@ Ensures deletion of ansible-vault generated password files."
     (remove-hook 'before-save-hook 'ansible-vault--before-save-hook t)
     (remove-hook 'kill-buffer-hook 'ansible-vault--kill-buffer-hook t)
 
-    ;; Re-encrypt the current buffer
-    (if (not (ansible-vault--is-vault-file))
-        (ansible-vault-encrypt-current-buffer))
+    ;; Only re-encrypt the buffer if buffer is changed; otherwise revert
+    ;; to on-disk contents.
+    (if (and (buffer-modified-p) (not (ansible-vault--is-vault-file)))
+        (ansible-vault-encrypt-current-buffer)
+      (revert-buffer nil t nil))
 
     ;; Clean up password state
     (ansible-vault--flush-password)
