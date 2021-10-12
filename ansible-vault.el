@@ -65,12 +65,11 @@ you for a password."
   :type 'string
   :group 'ansible-vault)
 
-;;TODO: Make this more robust to version changes
-(defvar ansible-vault--file-header "$ANSIBLE_VAULT;1.1;AES256"
-  "`ansible-vault' file header for identification of encrypted buffers.
+(defvar ansible-vault--file-header
+  "\\$ANSIBLE_VAULT;1\\.[0-2];AES256;?[:word:]?"
+  "`ansible-vault' file header regexp for identification of encrypted buffers.
 
-This will probably change at some point in the future and break
-everything and that will be sad.")
+This supports current ansible-vault specs with regards to file header contents.")
 
 (defvar ansible-vault--point 0
   "Internal variable for `ansible-vault-mode'.
@@ -102,11 +101,11 @@ don't have to keep asking the user for it.")
 
 This function just looks to see if the first line of the buffer
 is `ansible-vault--file-header'."
-  (let ((header-length (+ 1 (length ansible-vault--file-header))))
-    (and (> (point-max) header-length)
-         (string= ansible-vault--file-header
-                  (buffer-substring-no-properties (point-min) header-length)))
-    ))
+  (setq-local is-vault
+              (string-match ansible-vault--file-header (buffer-string)))
+  (if (= is-vault 0)
+      t
+    f))
 
 (defun ansible-vault--error-buffer ()
   "Generate or return `ansible-vault' error report buffer."
