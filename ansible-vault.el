@@ -101,11 +101,7 @@ don't have to keep asking the user for it.")
 
 This function just looks to see if the first line of the buffer
 is `ansible-vault--file-header'."
-  (setq-local is-vault
-              (string-match ansible-vault--file-header (buffer-string)))
-  (if (= is-vault 0)
-      t
-    f))
+  (zerop (string-match ansible-vault--file-header (buffer-string))))
 
 (defun ansible-vault--error-buffer ()
   "Generate or return `ansible-vault' error report buffer."
