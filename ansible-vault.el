@@ -194,10 +194,8 @@ ANSIBLE_VAULT_PASSWORD_FILE, the ansible vault configuration files, and the
 minor-mode configured value.  If that fails, it will prompt the user for
 input."
   (interactive)
-  (let ((env-val (getenv "ANSIBLE_VAULT_PASSWORD_FILE"))
-        (vault-id-pair (assoc ansible-vault--vault-id ansible-vault-vault-id-alist)))
+  (let ((env-val (getenv "ANSIBLE_VAULT_PASSWORD_FILE")))
     (cond ((> (length env-val) 0) env-val)
-          (vault-id-pair (cdr vault-id-pair))
           ((> (length (ansible-vault--process-config-files)) 0) '())
           (t (or ansible-vault-password-file (ansible-vault--request-password))))
     ))
