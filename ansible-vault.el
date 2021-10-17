@@ -72,8 +72,8 @@ you for a password."
 
 (defvar ansible-vault--file-header-regex
   (rx line-start
-      "$ANSIBLE_VAULT;1." (in (?0 . ?2)) ";AES" (optional "256")
-      (optional ";" (one-or-more any))
+      "$ANSIBLE_VAULT;" (group "1." (in (?0 . ?2))) ";AES" (optional "256")
+      (optional ";" (group (one-or-more any)))
       line-end)
   "Regex for `ansible-vault' header for identifying of encrypted buffers.")
 
