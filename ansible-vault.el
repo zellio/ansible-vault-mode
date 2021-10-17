@@ -65,6 +65,11 @@ you for a password."
   :type 'string
   :group 'ansible-vault)
 
+(defcustom ansible-vault-minor-mode-prefix "C-c a"
+  "Chord prefix for ansible-vault minor mode."
+  :type 'string
+  :group 'ansible-vault)
+
 (defvar ansible-vault--file-header-regex
   (rx line-start
       "$ANSIBLE_VAULT;1." (in (?0 . ?2)) ";AES" (optional "256")
@@ -279,6 +284,12 @@ ERROR-BUFFER defaults to `ansible-vault--error-buffer'."
   "In place encryption of region from START to END using `ansible-vault'."
   (interactive "r")
   (ansible-vault--execute-on-region "encrypt_string" start end))
+
+(defmacro ansible-vault--chord (chord)
+  "Key chord generator for ansible-vault minor mode.
+
+CHORD is the trailing key sequence to append ot the mode prefix."
+  `(kbd ,(concat ansible-vault-minor-mode-prefix " " chord)))
 
 (defvar ansible-vault-mode-map
   (let ((map (make-sparse-keymap)))
