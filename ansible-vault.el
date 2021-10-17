@@ -216,11 +216,19 @@ is set to 0600."
     (push ansible-vault--password-file ansible-vault--password-file-list))
   ansible-vault--password-file)
 
+(defun ansible-vault--request-vault-id (vault-id)
+  "Requests Ansible vault-id from the user.
+
+VAULT-ID Ansible vault vault-id."
+  (interactive "sVault Id: ")
+  (setq-local ansible-vault--vault-id vault-id))
+
 (defun ansible-vault--flush-password ()
   "Clears internal password state."
   (when ansible-vault--password
     (delete-file ansible-vault--password-file)
     (delete ansible-vault--password-file ansible-vault--password-file-list)
+    (setq-local ansible-vault--vault-id nil)
     (setq-local ansible-vault--password nil)
     (setq-local ansible-vault--password-file nil)))
 
@@ -318,6 +326,7 @@ CHORD is the trailing key sequence to append ot the mode prefix."
 
 (defvar ansible-vault-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c a i") 'ansible-vault--request-vault-id)
     map)
   "Keymap for `ansible-vault' minor mode.")
 
