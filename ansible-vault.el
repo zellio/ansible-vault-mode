@@ -89,6 +89,12 @@ decryption process on save to maintain continuity.")
 This is used to store the list of password files that ansible
 vault must clear on close.")
 
+(defvar ansible-vault--vault-id '()
+  "Internal variable for `ansible-vault-mode'.
+
+This is used to store the vault-id for the current buffer for
+encryption and decryption.")
+
 (defvar ansible-vault--password-file '()
   "Internal variable for `ansible-vault-mode'.
 
@@ -101,6 +107,12 @@ file as we don't trust the user.")
 This is used to store the password for a file in memory so we
 don't have to keep asking the user for it.")
 
+(defvar ansible-vault--header-version '()
+  "Internal variable for `ansible-vault-mode'.
+
+This is used to store the current version of the ansible vault
+file.")
+
 ;;;###autoload
 (defun ansible-vault--is-vault-file ()
   "Identifies if the current buffer is an encrypted `ansible-vault' file.
@@ -109,8 +121,11 @@ This function just looks to see if the first line of the buffer
 is matched by `ansible-vault--file-header-regex'."
   (save-excursion
     (goto-char (point-min))
-    (let ((file-header (thing-at-point 'line t)))
-      (zerop (string-match ansible-vault--file-header-regex file-header)))
+    (let* ((file-header (thing-at-point 'line t))
+           (first-match (string-match ansible-vault--file-header-regex file-header)))
+      (setq-local ansible-vault--header-version (match-string 1 file-header))
+      (setq-local ansible-vault--vault-id (match-string 2 file-header))
+      (zerop first-match))
     ))
 
 (defun ansible-vault--error-buffer ()
