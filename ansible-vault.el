@@ -70,6 +70,14 @@ you for a password."
   :type 'string
   :group 'ansible-vault)
 
+(defcustom ansible-vault-vault-id-alist '()
+  "Associative list of strings containing (vault-id . password-file) pairs.
+
+This list allows for managing `ansible-vault' password files via
+the 1.2 vault-id syntax."
+  :type '(alist :key-type string :value-type string)
+  :group 'ansible-vault)
+
 (defvar ansible-vault--file-header-regex
   (rx line-start
       "$ANSIBLE_VAULT;" (group "1." (in (?0 . ?2))) ";AES" (optional "256")
@@ -186,8 +194,10 @@ ANSIBLE_VAULT_PASSWORD_FILE, the ansible vault configuration files, and the
 minor-mode configured value.  If that fails, it will prompt the user for
 input."
   (interactive)
-  (let ((env-val (getenv "ANSIBLE_VAULT_PASSWORD_FILE")))
+  (let ((env-val (getenv "ANSIBLE_VAULT_PASSWORD_FILE"))
+        (vault-id-pair (assoc ansible-vault--vault-id ansible-vault-vault-id-alist)))
     (cond ((> (length env-val) 0) env-val)
+          (vault-id-pair (cdr vault-id-pair))
           ((> (length (ansible-vault--process-config-files)) 0) '())
           (t (or ansible-vault-password-file (ansible-vault--request-password))))
     ))
