@@ -115,11 +115,34 @@ file as we don't trust the user.")
 This is used to store the password for a file in memory so we
 don't have to keep asking the user for it.")
 
-(defvar ansible-vault--header-version '()
-  "Internal variable for `ansible-vault-mode'.
+(defvar ansible-vault--header-format-id '()
+  "Internal variable for `ansible-vault-mode'.")
 
-This is used to store the current version of the ansible vault
-file.")
+(defvar ansible-vault--header-version '()
+  "Internal variable for `ansible-vault-mode'.")
+
+(defvar ansuble-vault--header-cipher-algorithm '()
+  "Internal variable for `ansible-vault-mode'.")
+
+(defvar ansible-vault--header-vault-id '()
+  "Internal variable for `ansible-vault-mode'.")
+
+(defun ansible-vault--fingerprint-file ()
+  "Parse and store the ansible-vault header values."
+  (save-excursion
+    (goto-char (point-min))
+    (let* ((first-line (thing-at-point 'line t))
+           (header-tokens (split-string first-line ";" t t))
+           (format-id (car header-tokens))
+           (version (cadr header-tokens))
+           (cipher-algorithm (caddr header-tokens))
+           (vault-id (cadddr header-tokens)))
+      (when (string= "$ANSIBLE_VAULT" format-id)
+        (setq-local
+         ansible-vault--header-format-id format-id
+         ansible-vault--header-version version
+         ansuble-vault--header-cipher-algorithm cipher-algorithm
+         ansible-vault--header-vault-id vault-id)))))
 
 ;;;###autoload
 (defun ansible-vault--is-vault-file ()
@@ -127,14 +150,8 @@ file.")
 
 This function just looks to see if the first line of the buffer
 is matched by `ansible-vault--file-header-regex'."
-  (save-excursion
-    (goto-char (point-min))
-    (let* ((file-header (thing-at-point 'line t))
-           (first-match (string-match ansible-vault--file-header-regex file-header)))
-      (setq-local ansible-vault--header-version (match-string 1 file-header))
-      (setq-local ansible-vault--vault-id (match-string 2 file-header))
-      (zerop first-match))
-    ))
+  (ansible-vault--fingerprint-file)
+  (string= "$ANSIBLE_VAULT" ansible-vault--header-format-id))
 
 (defun ansible-vault--error-buffer ()
   "Generate or return `ansible-vault' error report buffer."
