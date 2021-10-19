@@ -490,7 +490,7 @@ Ensures deletion of ansible-vault generated password files."
 
     ;; Only re-encrypt the buffer if buffer is changed; otherwise revert
     ;; to on-disk contents.
-    (if (and (buffer-modified-p) (not (ansible-vault--is-vault-file)))
+    (if (and (buffer-modified-p) (not (ansible-vault--is-encrypted-vault-file)))
         (ansible-vault-encrypt-current-buffer)
       (revert-buffer nil t nil))
 
