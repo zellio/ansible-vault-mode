@@ -408,6 +408,7 @@ ERROR-BUFFER defaults to `ansible-vault--error-buffer'."
   "Encrypts the current buffer and writes the file."
   (interactive)
   (setq-local ansible-vault--auto-encryption-enabled t)
+  (set-buffer-modified-p t)
   (save-buffer 0)
   (ansible-vault--fingerprint-buffer))
 
