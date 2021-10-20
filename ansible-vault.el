@@ -340,7 +340,10 @@ its password file."
 
 (defun ansible-vault--cleanup-password-error ()
   ""
-  )
+  (when ansible-vault--vault-id
+    (ansible-vault--flush-vault-id))
+  (when ansible-vault--password-file
+    (ansible-vault--flush-password-file)))
 
 (defun ansible-vault--execute-on-region (command &optional start end buffer error-buffer)
   "In place execution of a given COMMAND using `ansible-vault'.
