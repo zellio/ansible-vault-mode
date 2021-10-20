@@ -476,13 +476,13 @@ Ensures deletion of ansible-vault generated password files."
 
 (defun ansible-vault--clear-local-variables ()
   ""
-  (dolist ((var '(ansible-vault--header-format-id
+  (dolist (var '(ansible-vault--header-format-id
                   ansible-vault--header-version
                   ansuble-vault--header-cipher-algorithm
                   ansible-vault--header-vault-id
                   ansible-vault--point
                   ansible-vault--password-file
-                  ansible-vault--vault-id)))
+                  ansible-vault--vault-id))
     (makunbound var)))
 
 ;;;###autoload
