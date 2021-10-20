@@ -132,7 +132,7 @@ Ansible vault-id, used for v1.2 encryption / decryption.")
   "Parse and store the ansible-vault header values."
   (save-excursion
     (goto-char (point-min))
-    (let* ((first-line (string-trim-right (thing-at-point 'line t)))
+    (let* ((first-line (string-trim-right (or (thing-at-point 'line t) "")))
            (header-tokens (split-string first-line ";" t))
            (format-id (car header-tokens))
            (version (cadr header-tokens))
@@ -345,23 +345,24 @@ ERROR-BUFFER defaults to `ansible-vault--error-buffer'."
     (unwind-protect
         (progn
           (ansible-vault--guess-password-file)
-          (ansible-vault--env-mask
-           "ANSIBLE_VAULT_PASSWORD_FILE" nil
-           (shell-command-on-region
-            start end (ansible-vault--shell-command command)
-            ansible-vault-stdout nil
-            ansible-vault-stderr nil))
-          (if (zerop (buffer-size ansible-vault-stderr))
-              (progn
-                (delete-region start end)
-                (insert-buffer-substring ansible-vault-stdout))
-            (let ((inhibit-read-only t))
-              (switch-to-buffer error-buffer)
-              (goto-char (point-max))
-              (insert "$ " shell-command "\n")
-              (insert-buffer-substring ansible-vault-stderr)
-              (insert "\n")
-              (ansible-vault--cleanup-password-error))))
+          (let ((shell-command (ansible-vault--shell-command command)))
+            (ansible-vault--env-mask
+             "ANSIBLE_VAULT_PASSWORD_FILE" nil
+             (shell-command-on-region start end shell-command
+                                      ansible-vault-stdout nil
+                                      ansible-vault-stderr nil))
+            (if (zerop (buffer-size ansible-vault-stderr))
+                (progn
+                  (delete-region start end)
+                  (insert-buffer-substring ansible-vault-stdout))
+              (let ((inhibit-read-only t))
+                (switch-to-buffer error-buffer)
+                (goto-char (point-max))
+                (insert "$ " shell-command "\n")
+                (insert-buffer-substring ansible-vault-stderr)
+                (insert "\n")
+                (ansible-vault--cleanup-password-error)))
+            ))
       (kill-buffer ansible-vault-stdout)
       (kill-buffer ansible-vault-stderr))
     ))
@@ -371,10 +372,24 @@ ERROR-BUFFER defaults to `ansible-vault--error-buffer'."
   (interactive)
   (ansible-vault--execute-on-region "decrypt"))
 
+(defun ansible-vault-decrypt-current-file ()
+  "Decrypts the current buffer and writes the file."
+  (interactive)
+  (ansible-vault-decrypt-current-buffer)
+  (save-buffer 0)
+  (ansible-vault--clear-local-variables))
+
 (defun ansible-vault-encrypt-current-buffer ()
   "In place encryption of `current-buffer' using `ansible-vault'."
   (interactive)
   (ansible-vault--execute-on-region "encrypt"))
+
+(defun ansible-vault-encrypt-current-file ()
+  "Encrypts the current buffer and writes the file."
+  (interactive)
+  (ansible-vault-encrypt-current-buffer)
+  (ansible-vault--fingerprint-buffer)
+  (save-buffer 0))
 
 (defun ansible-vault-decrypt-region (start end)
   "In place decryption of region from START to END using `ansible-vault'."
@@ -411,9 +426,9 @@ CHORD is the trailing key sequence to append ot the mode prefix."
 
 (defvar ansible-vault-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (ansible-vault--chord "d") 'ansible-vault-decrypt-current-buffer)
+    (define-key map (ansible-vault--chord "d") 'ansible-vault-decrypt-current-file)
     (define-key map (ansible-vault--chord "D") 'ansible-vault-decrypt-region)
-    (define-key map (ansible-vault--chord "e") 'ansible-vault-encrypt-current-buffer)
+    (define-key map (ansible-vault--chord "e") 'ansible-vault-encrypt-current-file)
     (define-key map (ansible-vault--chord "E") 'ansible-vault-encrypt-region)
     (define-key map (ansible-vault--chord "p") 'ansible-vault--request-password)
     (define-key map (ansible-vault--chord "i") 'ansible-vault--request-vault-id)
@@ -425,18 +440,20 @@ CHORD is the trailing key sequence to append ot the mode prefix."
 
 Saves the current position and encrypts the file before writing
 to disk."
-  (setq-local ansible-vault--point (point))
-  (ansible-vault-encrypt-current-buffer))
+  (when ansible-vault--header-format-id
+    (setq-local ansible-vault--point (point))
+    (ansible-vault-encrypt-current-buffer)))
 
 (defun ansible-vault--after-save-hook ()
   "`after-save-hook' for files managed by `ansible-vault-mode'.
 
 Decrypts the file, and returns the point to the position saved by
 the `before-save-hook'."
-  (ansible-vault-decrypt-current-buffer)
-  (set-buffer-modified-p nil)
-  (goto-char ansible-vault--point)
-  (setq-local ansible-vault--point 0))
+  (when ansible-vault--header-format-id
+    (ansible-vault-decrypt-current-buffer)
+    (set-buffer-modified-p nil)
+    (goto-char ansible-vault--point)
+    (setq-local ansible-vault--point 0)))
 
 (defun ansible-vault--kill-buffer-hook ()
   "`kill-buffer-hook' for buffers managed by `ansible-vault-mode'.
@@ -457,6 +474,17 @@ Ensures deletion of ansible-vault generated password files."
       (delete-file file))
     ))
 
+(defun ansible-vault--clear-local-variables ()
+  ""
+  (dolist ((var '(ansible-vault--header-format-id
+                  ansible-vault--header-version
+                  ansuble-vault--header-cipher-algorithm
+                  ansible-vault--header-vault-id
+                  ansible-vault--point
+                  ansible-vault--password-file
+                  ansible-vault--vault-id)))
+    (makunbound var)))
+
 ;;;###autoload
 (define-minor-mode ansible-vault-mode
   "Minor mode for manipulating ansible-vault files"
@@ -468,10 +496,12 @@ Ensures deletion of ansible-vault generated password files."
       ;; Enable the mode
       (progn
         ;; Disable backups
-        (setq-local backup-inhibited t)
+        (setq-local
+         backup-inhibited t)
 
         ;; Disable auto-save
-        (if auto-save-default (auto-save-mode -1))
+        (when auto-save-default
+          (auto-save-mode -1))
 
         ;; Decrypt the current buffer first if it needs to be
         (when (ansible-vault--is-encrypted-vault-file)
@@ -500,7 +530,9 @@ Ensures deletion of ansible-vault generated password files."
 
     (if auto-save-default (auto-save-mode 1))
 
-    (setq-local backup-inhibited nil)))
+    (setq-local backup-inhibited nil)
+
+    (ansible-vault--clear-local-variables)))
 
 (add-hook 'kill-emacs-hook 'ansible-vault--kill-emacs-hook t)
 
