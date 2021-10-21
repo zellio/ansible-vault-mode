@@ -8,7 +8,7 @@
 ;; Created: 2016-09-25
 ;; Version: 0.5.0
 ;; Keywords: ansible, ansible-vault, tools
-;; Package-Requires: ((emacs "24.3") (seq "2.20"))
+;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is not part of GNU Emacs.
 
