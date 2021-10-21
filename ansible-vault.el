@@ -295,7 +295,7 @@ PASSWORD-FILE path to the stored secret for provided VAULT-ID."
     (when (map-contains-key ansible-vault-vault-id-alist ansible-vault--vault-id)
       (setq ansible-vault-vault-id-alist
             (map-filter (lambda (key _)
-                          (not (string= key vault-id)))
+                          (not (string= key ansible-vault--vault-id)))
                         ansible-vault-vault-id-alist)))
     (setq ansible-vault--vault-id nil)
     (ansible-vault--flush-password-file)))
