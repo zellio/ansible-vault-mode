@@ -283,7 +283,7 @@ PASSWORD-FILE path to the stored secret for provided VAULT-ID."
       (setq ansible-vault--password-file-list
             (remove ansible-vault--password-file ansible-vault--password-file-list))
       (delete-file ansible-vault--password-file))
-    (setq ansible-vault--password-file nil)))
+    (setq-local ansible-vault--password-file nil)))
 
 (define-obsolete-variable-alias
   'ansible-vault--flush-password 'ansible-vault--flush-password-file "0.4.2"
@@ -297,7 +297,7 @@ PASSWORD-FILE path to the stored secret for provided VAULT-ID."
             (map-filter (lambda (key _)
                           (not (string= key ansible-vault--vault-id)))
                         ansible-vault-vault-id-alist)))
-    (setq ansible-vault--vault-id nil)
+    (setq-local ansible-vault--vault-id nil)
     (ansible-vault--flush-password-file)))
 
 (defun ansible-vault--error-buffer ()
