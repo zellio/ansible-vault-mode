@@ -581,19 +581,6 @@ Ensures deletion of ansible-vault generated password files."
 
 (add-hook 'kill-emacs-hook 'ansible-vault--kill-emacs-hook t)
 
-(defun ansible-vault--debug ()
-  (interactive)
-  (message
-   (format "ansible-vault--header-format-id: %s\nansible-vault--header-version: %s\nansuble-vault--header-cipher-algorithm: %s\nansible-vault--header-vault-id: %s\nansible-vault--point: %s\nansible-vault--password-file: %s\nansible-vault--vault-id: %s\nauto-encryption-enabled: %s"
-           ansible-vault--header-format-id
-           ansible-vault--header-version
-           ansuble-vault--header-cipher-algorithm
-           ansible-vault--header-vault-id
-           ansible-vault--point
-           ansible-vault--password-file
-           ansible-vault--vault-id
-           ansible-vault--auto-encryption-enabled)))
-
 (provide 'ansible-vault)
 
 ;;; ansible-vault.el ends here
