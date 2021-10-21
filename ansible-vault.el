@@ -182,7 +182,10 @@ SUB-COMMAND ansible-vault cli sub-command to type."
   (cdr (assoc sub-command ansible-vault--sub-command-type-alist)))
 
 (defun ansible-vault--command-flags (sub-command)
-  ""
+  "Generate the command flags for calling `ansible-vault'.
+
+SUB-COMMAND the sub-command of ansible vault as a string.  Valid
+values can be found in `ansible-vault--sub-command-type-alist'."
   (let* ((type (ansible-vault--sub-command-type sub-command))
          (v1.2-p (or (string= ansible-vault--header-version "1.2")
                      ansible-vault--header-vault-id
@@ -236,9 +239,12 @@ commandline flag for it."
           (match-string 1 content))))
     ))
 
-(defun ansible-vault--create-password-file (password &optional password-file)
-  ""
-  (let* ((temp-file (or password-file (make-temp-file "ansible-vault-secret-"))))
+(defun ansible-vault--create-password-file (password)
+  "Generate a temporary file to store PASSWORD.
+
+The generated file is located in TMPDIR, and is marked read-only
+for owner."
+  (let* ((temp-file (make-temp-file "ansible-vault-secret-")))
     (set-file-modes temp-file #o0600)
     (append-to-file password nil temp-file)
     (set-file-modes temp-file #o0400)
@@ -247,13 +253,21 @@ commandline flag for it."
     temp-file))
 
 (defun ansible-vault--request-password (password)
-  ""
+  "Prompt user a for the password for the current buffer.
+
+PASSWORD ansible-vault password to be stored."
   (interactive
    (list (read-passwd "Vault Password: ")))
   (ansible-vault--create-password-file password))
 
 (defun ansible-vault--request-vault-id (vault-id &optional password-file)
-  ""
+  "Prompt user for a vault-id for the current buffer.
+
+If the vault-id doesn't have an associated password file, request
+a password from the user as well.
+
+VAULT-ID ansible-vault vault id.
+PASSWORD-FILE path to the stored secret for provided VAULT-ID."
   (interactive "sVault Id: ")
   (let* ((vault-id-pair
           (or (assoc vault-id ansible-vault-vault-id-alist)
@@ -265,7 +279,7 @@ commandline flag for it."
     vault-id-pair))
 
 (defun ansible-vault--flush-password-file ()
-  ""
+  "Delete password file and associated buffer local variables."
   (when ansible-vault--password-file
     (when (member ansible-vault--password-file ansible-vault--password-file-list)
       (setq ansible-vault--password-file-list
@@ -278,7 +292,7 @@ commandline flag for it."
   "Renamed for semantic correctness.")
 
 (defun ansible-vault--flush-vault-id ()
-  ""
+  "Delete vault-id pair and associated buffer local variables."
   (when ansible-vault--vault-id
     (when (map-contains-key ansible-vault-vault-id-alist ansible-vault--vault-id)
       (setq ansible-vault-vault-id-alist
@@ -339,7 +353,7 @@ its password file."
   ansible-vault--password-file)
 
 (defun ansible-vault--cleanup-password-error ()
-  ""
+  "Flush both vault and password values."
   (when ansible-vault--vault-id
     (ansible-vault--flush-vault-id))
   (when ansible-vault--password-file
@@ -501,14 +515,15 @@ Ensures deletion of ansible-vault generated password files."
     ))
 
 (defun ansible-vault--clear-local-variables ()
-  ""
+  "Unset all buffer local variables."
   (dolist (var '(ansible-vault--header-format-id
-                  ansible-vault--header-version
-                  ansuble-vault--header-cipher-algorithm
-                  ansible-vault--header-vault-id
-                  ansible-vault--point
-                  ansible-vault--password-file
-                  ansible-vault--vault-id))
+                 ansible-vault--header-version
+                 ansuble-vault--header-cipher-algorithm
+                 ansible-vault--header-vault-id
+                 ansible-vault--point
+                 ansible-vault--password-file
+                 ansible-vault--vault-id
+                 ansible-vault--auto-encryption-enabled))
     (makunbound var)))
 
 ;;;###autoload
@@ -531,7 +546,8 @@ Ensures deletion of ansible-vault generated password files."
 
         ;; Decrypt the current buffer first if it needs to be
         (when (ansible-vault--is-encrypted-vault-file)
-          (setq-local ansible-vault--auto-encryption-enabled t)
+          (setq-local
+           ansible-vault--auto-encryption-enabled t)
           (ansible-vault--fingerprint-buffer)
           (ansible-vault-decrypt-current-buffer)
           (set-buffer-modified-p nil))
@@ -558,7 +574,8 @@ Ensures deletion of ansible-vault generated password files."
 
     (if auto-save-default (auto-save-mode 1))
 
-    (setq-local backup-inhibited nil)
+    (setq-local
+     backup-inhibited nil)
 
     (ansible-vault--clear-local-variables)))
 
