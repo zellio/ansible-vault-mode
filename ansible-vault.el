@@ -35,8 +35,6 @@
 
 ;;; Code:
 
-;; (require 'seq)
-
 (eval-when-compile (require 'subr-x))
 
 (defconst ansible-vault-version "0.5.0"
