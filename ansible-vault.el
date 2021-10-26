@@ -164,7 +164,7 @@ This function just looks to see if the first line of the buffer
 is matched by `ansible-vault--file-header-regex'."
   (save-excursion
     (goto-char (point-min))
-    (let* ((file-header (thing-at-point 'line t))
+    (let* ((file-header (or (thing-at-point 'line t) ""))
            (first-match
             (string-match ansible-vault--file-header-regex file-header)))
       (and first-match (zerop first-match)))))
@@ -237,7 +237,7 @@ commandline flag for it."
           (match-string 1 content))))
     ))
 
-(defun ansible-vault--create-password-file (password)
+(defun ansible-vault--create-password-file (password-file)
   "Generate a temporary file to store PASSWORD.
 
 The generated file is located in TMPDIR, and is marked read-only
@@ -271,9 +271,11 @@ PASSWORD-FILE path to the stored secret for provided VAULT-ID."
           (or (assoc vault-id ansible-vault-vault-id-alist)
               (let* ((password-file (or password-file
                                         (call-interactively 'ansible-vault--request-password))))
-                (car (push (cons vault-id password-file) ansible-vault-vault-id-alist))))))
+                (car (push (cons vault-id password-file) ansible-vault-vault-id-alist)))))
+         (password-file (or password-file (cdr vault-id-pair))))
     (setq-local
-     ansible-vault--vault-id vault-id)
+     ansible-vault--vault-id vault-id
+     ansible-vault--password-file password-file)
     vault-id-pair))
 
 (defun ansible-vault--flush-password-file ()
@@ -343,7 +345,7 @@ its password file."
             (setq-local
              ansible-vault--password-file password-file))))
       ))
-  (when (not (file-readable-p ansible-vault--password-file))
+  (when (not (and ansible-vault--password-file (file-readable-p ansible-vault--password-file)))
     (let* ((vault-id (or ansible-vault--header-vault-id ansible-vault--vault-id)))
       (cond (vault-id (ansible-vault--request-vault-id vault-id))
             (t (call-interactively 'ansible-vault--request-password)))
@@ -433,20 +435,30 @@ ERROR-BUFFER defaults to `ansible-vault--error-buffer'."
   (let ((inhibit-read-only t))
     ;; Restrict the following operations to the selected region.
     (narrow-to-region start end)
-    ;; Delete the vault header, if any.
-    (let ((end-of-first-line (progn (goto-char 1) (end-of-line) (point))))
-      (goto-char (point-min))
-      (when (re-search-forward (rx line-start "!vault |" line-end) end-of-first-line t)
-        (replace-match "")
-        (kill-line)))
-    ;; Delete any leading whitespace in the region.
     (goto-char (point-min))
-    (delete-horizontal-space)
-    (while (zerop (forward-line 1))
-      (delete-horizontal-space))
-    ;; Decrypt the region.
-    (ansible-vault-decrypt-current-buffer)
-    ;; Show the rest of the buffer.
+    ;; Delete header and save non-vault values
+    (let* ((first-line (thing-at-point 'line t))
+           (match-data (string-match (rx line-start (group (zero-or-more any)) "!vault |" line-end) first-line))
+           (header (match-string 1 first-line)))
+      ;; remove header if it exists
+      (when (and match-data (zerop match-data))
+        (kill-whole-line))
+      ;; realign encrypted data
+      (goto-char (point-min))
+      (let* ((line-count 0))
+        (while (zerop line-count)
+          (delete-horizontal-space)
+          (setq
+           line-count (forward-line))))
+      ;; fingerprint new buffer
+      (ansible-vault--fingerprint-buffer)
+      ;; decrypt region
+      (ansible-vault-decrypt-current-buffer)
+      ;; replace header
+      (when header
+        (goto-char (point-min))
+        (insert header)))
+    ;; show the whole buffer again
     (widen)))
 
 (defun ansible-vault-encrypt-region (start end)
