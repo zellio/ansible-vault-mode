@@ -237,7 +237,7 @@ commandline flag for it."
           (match-string 1 content))))
     ))
 
-(defun ansible-vault--create-password-file (password-file)
+(defun ansible-vault--create-password-file (password)
   "Generate a temporary file to store PASSWORD.
 
 The generated file is located in TMPDIR, and is marked read-only
