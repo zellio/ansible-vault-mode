@@ -57,18 +57,18 @@ The ```*ansible-vault-error*``` buffer will contain any errors from ansible-vaul
 To enable `ansible-vault-mode` just based on the buffer contents, not on file extension, you can do:
 
 ```
-  (defun ansible-vault-mode-maybe ()
-    (when (ansible-vault--is-vault-file)
-      (ansible-vault-mode 1)))
+(defun ansible-vault-mode-maybe ()
+  (when (ansible-vault--is-encrypted-vault-file)
+    (ansible-vault-mode 1)))
 
-  (add-hook 'yaml-mode-hook 'ansible-vault-mode-maybe)
+(add-hook 'yaml-mode-hook 'ansible-vault-mode-maybe)
 ```
 
 And if you use the handy `use-package` package replace the last line with:
 
 ```
-  (use-package ansible-vault
-    :init (add-hook 'yaml-mode-hook 'ansible-vault-mode-maybe))
+(use-package ansible-vault
+  :init (add-hook 'yaml-mode-hook 'ansible-vault-mode-maybe))
 ```
 
 ### Per directory ansible-vault password file
@@ -91,6 +91,37 @@ ansible-vault-mode in your init file this way:
                    (string-prefix-p "vault_" (file-name-base)))
               (ansible-vault-mode 1))))
 ```
+
+### Vault Id configuration
+
+Ansible Vault now supports vault-id for multiple passwords. You can
+persistently track vault ids between sessions by configuring the
+`ansible-vault-vault-id-alist` value with `(vault-id . password-file)` pairs.
+
+```lisp
+(setq
+ ansible-vault-vault-id-alist
+ '(("nonprod" . "/home/notprod/ansible/vault/nonprod-secret")
+   ("prod" . "/home/notprod/ansible/vault/prod-secret")
+   ("foo" . "/etc/foo.secret")))
+```
+
+This allows properly tagged v1.2 vault files to automatically find and use
+their associated password files.
+
+### Notes on version 0.5.0 and beyond
+
+ - `ansible-vault-mode` is now more aggressive in detecting valid password
+   files. If it fails to locate a valid password file it will prompt the user
+   for input.
+
+ - The minor mode now defines some key bindings under `C-c a`
+    - `C-c a d` Decrypts the current file and saves it
+    - `C-c a D` Decrypts the current region
+    - `C-c a e` Encrypts the current file and saves it
+    - `C-c a E` Encrypts the current region
+    - `C-c a p` Updates the password of the current buffer
+    - `C-c a i` Updates the vault-id of the current buffer
 
 ## Contributing
 
