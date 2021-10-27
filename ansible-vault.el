@@ -6,7 +6,7 @@
 ;; Maintainer: Zachary Elliott <contact@zell.io>
 ;; URL: http://github.com/zellio/ansible-vault-mode
 ;; Created: 2016-09-25
-;; Version: 0.5.0
+;; Version: 0.5.1
 ;; Keywords: ansible, ansible-vault, tools
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -37,7 +37,7 @@
 
 (eval-when-compile (require 'subr-x))
 
-(defconst ansible-vault-version "0.5.0"
+(defconst ansible-vault-version "0.5.1"
   "`ansible-vault' version.")
 
 (defgroup ansible-vault nil
@@ -237,7 +237,7 @@ commandline flag for it."
           (match-string 1 content))))
     ))
 
-(defun ansible-vault--create-password-file (password-file)
+(defun ansible-vault--create-password-file (password)
   "Generate a temporary file to store PASSWORD.
 
 The generated file is located in TMPDIR, and is marked read-only
