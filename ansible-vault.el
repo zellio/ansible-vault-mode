@@ -466,11 +466,11 @@ ERROR-BUFFER defaults to `ansible-vault--error-buffer'."
   (interactive "r")
   (ansible-vault--execute-on-region "encrypt_string" start end))
 
-(defmacro ansible-vault--chord (chord)
+(defun ansible-vault--chord (chord)
   "Key sequence generator for ansible-vault minor mode.
 
 CHORD is the trailing key sequence to append ot the mode prefix."
-  `(kbd ,(concat ansible-vault-minor-mode-prefix " " chord)))
+  (kbd (concat ansible-vault-minor-mode-prefix " " chord)))
 
 (defvar ansible-vault-mode-map
   (let ((map (make-sparse-keymap)))
