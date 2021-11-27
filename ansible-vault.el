@@ -150,11 +150,10 @@ save hooks to treat ansible-vault file as encrypted on disk.")
            (cipher-algorithm (caddr header-tokens))
            (vault-id (cadddr header-tokens)))
       (when (string= "$ANSIBLE_VAULT" format-id)
-        (setq-local
-         ansible-vault--header-format-id format-id
-         ansible-vault--header-version version
-         ansuble-vault--header-cipher-algorithm cipher-algorithm
-         ansible-vault--header-vault-id vault-id)))))
+        (setq-local ansible-vault--header-format-id format-id)
+        (setq-local ansible-vault--header-version version)
+        (setq-local ansuble-vault--header-cipher-algorithm cipher-algorithm)
+        (setq-local ansible-vault--header-vault-id vault-id)))))
 
 ;;;###autoload
 (defun ansible-vault--is-encrypted-vault-file ()
@@ -273,9 +272,8 @@ PASSWORD-FILE path to the stored secret for provided VAULT-ID."
                                         (call-interactively 'ansible-vault--request-password))))
                 (car (push (cons vault-id password-file) ansible-vault-vault-id-alist)))))
          (password-file (or password-file (cdr vault-id-pair))))
-    (setq-local
-     ansible-vault--vault-id vault-id
-     ansible-vault--password-file password-file)
+    (setq-local ansible-vault--vault-id vault-id)
+    (setq-local ansible-vault--password-file password-file)
     vault-id-pair))
 
 (defun ansible-vault--flush-password-file ()
@@ -333,9 +331,8 @@ its password file."
            (ansible-config-path (ansible-vault--process-config-files)))
       (cond
        (vault-id-pair
-        (setq-local
-         ansible-vault--vault-id (car vault-id-pair)
-         ansible-vault--password-file (cdr vault-id-pair)))
+        (setq-local ansible-vault--vault-id (car vault-id-pair))
+        (setq-local ansible-vault--password-file (cdr vault-id-pair)))
        (ansible-vault--header-vault-id
         (ansible-vault--request-vault-id ansible-vault--header-vault-id))
        (t (let* ((password-file
