@@ -111,7 +111,7 @@ generation.")
 (defvar ansible-vault--header-version '()
   "Buffer local variable for `ansible-vault-mode'.")
 
-(defvar ansuble-vault--header-cipher-algorithm '()
+(defvar ansible-vault--header-cipher-algorithm '()
   "Buffer local variable for `ansible-vault-mode'.")
 
 (defvar ansible-vault--header-vault-id '()
@@ -152,7 +152,7 @@ save hooks to treat ansible-vault file as encrypted on disk.")
       (when (string= "$ANSIBLE_VAULT" format-id)
         (setq-local ansible-vault--header-format-id format-id)
         (setq-local ansible-vault--header-version version)
-        (setq-local ansuble-vault--header-cipher-algorithm cipher-algorithm)
+        (setq-local ansible-vault--header-cipher-algorithm cipher-algorithm)
         (setq-local ansible-vault--header-vault-id vault-id)))))
 
 ;;;###autoload
@@ -525,7 +525,7 @@ Ensures deletion of ansible-vault generated password files."
   "Unset all buffer local variables."
   (dolist (var '(ansible-vault--header-format-id
                  ansible-vault--header-version
-                 ansuble-vault--header-cipher-algorithm
+                 ansible-vault--header-cipher-algorithm
                  ansible-vault--header-vault-id
                  ansible-vault--point
                  ansible-vault--password-file
