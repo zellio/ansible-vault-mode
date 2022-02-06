@@ -294,13 +294,14 @@ PASSWORD-FILE path to the stored secret for provided VAULT-ID."
 (defun ansible-vault--flush-vault-id ()
   "Delete vault-id pair and associated buffer local variables."
   (when ansible-vault--vault-id
-    (when (map-contains-key ansible-vault-vault-id-alist ansible-vault--vault-id)
-      (setq ansible-vault-vault-id-alist
-            (map-filter (lambda (key _)
-                          (not (string= key ansible-vault--vault-id)))
-                        ansible-vault-vault-id-alist)))
-    (setq-local ansible-vault--vault-id nil)
-    (ansible-vault--flush-password-file)))
+    (let ((vault-id-pair (assoc ansible-vault--vault-id ansible-vault-vault-id-alist)))
+      (when (member (cdr vault-id-pair) ansible-vault--password-file-list)
+        (setq ansible-vault-vault-id-alist
+              (map-filter (lambda (key _)
+                            (not (string= key ansible-vault--vault-id)))
+                          ansible-vault-vault-id-alist))
+        (setq-local ansible-vault--vault-id nil)
+        (ansible-vault--flush-password-file)))))
 
 (defun ansible-vault--error-buffer ()
   "Generate or return `ansible-vaul't error report buffer."
